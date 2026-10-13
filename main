@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Detective: Digital Shadows</title>
+    <style>
+        :root {
+            --bg-color: #05070a;
+            --panel-bg: #0d1117;
+            --accent-cyan: #00f2ff;
+            --accent-purple: #b100ff;
+            --text-main: #e6edf3;
+            --text-dim: #8b949e;
+            --danger: #ff4444;
+            --success: #00ff88;
+            --border-glow: 0 0 10px rgba(0, 242, 255, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', 'Courier New', monospace; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- UI COMPONENTS --- */
+        .hidden { display: none !important; }
+
+        .terminal-text {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: var(--border-glow);
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background: var(--accent-cyan);
+            color: black;
+            box-shadow: var(--border-glow);
+        }
+
+        .btn:disabled {
+            border-color: #444;
+            color: #444;
+            cursor: not-allowed;
+        }
+
+        /* --- SCREENS --- */
+        .screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* MAIN MENU */
+        #main-menu {
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #05070a 100%);
+        }
+
+        #main-menu h1 {
+            font-size: 4rem;
+            margin-bottom: 30px;
+            color: var(--accent-cyan);
+            text-align: center;
+        }
+
+        /* INVESTIGATION DESKTOP */
+        #game-screen {
+            flex-direction: row;
+            padding: 0;
+        }
+
+        #sidebar {
+            width: 80px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--accent-purple);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+        }
+
+        .nav-icon {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .nav-icon.active {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            box-shadow: var(--border-glow);
+        }
+
+        #main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* WORKSTATION STYLE */
+        .desktop-icon {
+            display: inline-block;
+            width: 100px;
+            text-align: center;
+            margin: 20px;
+            cursor: pointer;
+        }
+
+        .desktop-icon img, .desktop-icon .folder-img {
+            width: 60px;
+            height: 60px;
+            background: #1c1c1c;
+            border: 1px solid var(--accent-cyan);
+            margin-bottom: 5px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* EVIDENCE BOARD */
+        .evidence-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .evidence-card {
+            background: #161b22;
+            border-left: 4px solid var(--accent-purple);
+            padding: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .evidence-card.selected {
+            border: 2px solid var(--accent-cyan);
+        }
+
+        /* INTERVIEW SCREEN */
+        .suspect-profile {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .suspect-img {
+            width: 200px;
+            height: 200px;
+            border: 1px solid var(--accent-cyan);
+            background: #1a1a1a;
+        }
+
+        .chat-window {
+            background: #000;
+            border: 1px solid #333;
+            height: 300px;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .msg { margin-bottom: 10px; line-height: 1.4; }
+        .msg.detective { color: var(--accent-cyan); }
+        .msg.suspect { color: var(--accent-purple); }
+
+        /* HUD */
+        #hud {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            display: flex;
+            gap: 20px;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border: 1px solid #333;
+        }
+
+        /* PUZZLE MODAL */
+        #puzzle-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .puzzle-box {
+            background: var(--panel-bg);
+            padding: 40px;
+            border: 2px solid var(--accent-cyan);
+            max-width: 600px;
+            width: 90%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MAIN MENU -->
+    <section id="main-menu" class="screen">
+        <h1 class="terminal-text">Cyber Detective<br><span style="color:var(--accent-purple)">Digital Shadows</span></h1>
+        <button class="btn" onclick="game.startNew()">New Investigation</button>
+        <button class="btn" id="continue-btn" onclick="game.load()">Continue Investigation</button>
+        <button class="btn" onclick="alert('Digital Shadows v1.0\nBuilt with Vanilla JS\nInvestigate NovaTech AI Theft.')">Case Files</button>
+    </section>
+
+    <!-- CASE BRIEFING -->
+    <section id="briefing-screen" class="screen hidden">
+        <h2 class="terminal-text" style="color:var(--accent-cyan)">Case File: NovaTech Incident</h2>
+        <div style="margin: 20px 0; line-height: 1.6; border-left: 2px solid var(--accent-cyan); padding-left: 20px;">
+            <p><strong>Year:</strong> 2045</p>
+            <p><strong>Location:</strong> Neo-Veridia Sector 7</p>
+            <p><strong>Incident:</strong> Unauthorized extraction of "Aegis" Neural AI source code.</p>
+            <p><strong>Background:</strong> NovaTech reports a breach at 03:00 AM. Senior Architect Elena Vance has gone missing. Security Chief Marcus Thorne claims it was an inside job.</p>
+        </div>
+        <button class="btn" onclick="game.showScreen('game-screen')">Enter Workspace</button>
+    </section>
+
+    <!-- MAIN GAME / DESKTOP -->
+    <section id="game-screen" class="screen hidden">
+        <div id="sidebar">
+            <div class="nav-icon active" onclick="game.showTab('desktop')" title="Files">📁</div>
+            <div class="nav-icon" onclick="game.showTab('board')" title="Evidence Board">📍</div>
+            <div class="nav-icon" onclick="game.showTab('interrogation')" title="Interrogation">👥</div>
+            <div class="nav-icon" onclick="game.showTab('accuse')" title="Final Accusation" style="color:var(--danger)">⚖️</div>
+        </div>
+
+        <div id="main-content">
+            <div id="hud">
+                <div>Clues: <span id="clue-count">0</span></div>
+                <div>Hints: <span id="hint-count">3</span></div>
+                <button class="btn" style="padding:2px 5px; font-size:10px" onclick="game.useHint()">Get Hint</button>
+            </div>
+
+            <!-- WORKSTATION VIEW -->
+            <div id="view-desktop">
+                <h3 class="terminal-text">NovaTech Remote Access</h3>
+                <div class="desktop-icon" onclick="game.openFile('email')">
+                    <div class="folder-img">✉️</div>
+                    <span>Emails</span>
+                </div>
+                <div class="desktop-icon" onclick="game.openFile('logs')">
+                    <div class="folder-img">📊</div>
+                    <span>Server Logs</span>
+                </div>
+                <div class="desktop-icon" onclick="game.openFile('encrypted')">
+                    <div class="folder-img">🔐</div>
+                    <span>Encrypted</span>
+                </div>
+            </div>
+
+            <!-- EVIDENCE BOARD -->
+            <div id="view-board" class="hidden">
+                <h3 class="terminal-text">Investigation Board</h3>
+                <p style="margin-bottom:10px; font-size: 0.8rem; color: var(--text-dim)">Select two clues to find connections.</p>
+                <div class="evidence-grid" id="evidence-display"></div>
+                <button class="btn" style="margin-top:20px" onclick="game.linkEvidence()">Link Selected Clues</button>
+            </div>
+
+            <!-- INTERROGATION -->
+            <div id="view-interrogation" class="hidden">
+                <h3 class="terminal-text">Suspect Interviews</h3>
+                <div style="display:flex; gap:10px; margin-bottom:20px;" id="suspect-list">
+                    <!-- Buttons injected via JS -->
+                </div>
+                <div id="interview-ui" class="hidden">
+                    <div class="suspect-profile">
+                        <div class="suspect-img" id="s-img"></div>
+                        <div>
+                            <h2 id="s-name"></h2>
+                            <p id="s-role" style="color:var(--accent-cyan)"></p>
+                            <p id="s-bio" style="font-size:0.9rem; margin-top:10px"></p>
+                        </div>
+                    </div>
+                    <div class="chat-window" id="chat-box"></div>
+                    <div id="dialogue-options"></div>
+                </div>
+            </div>
+
+            <!-- ACCUSATION -->
+            <div id="view-accuse" class="hidden">
+                <h3 class="terminal-text" style="color:var(--danger)">Submit Final Accusation</h3>
+                <p>Warning: Making an accusation will close the case. Ensure you have linked all critical evidence.</p>
+                <div id="accuse-options" style="margin-top:20px"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PUZZLE OVERLAY -->
+    <div id="puzzle-overlay" class="hidden">
+        <div class="puzzle-box" id="puzzle-content"></div>
+    </div>
+
+    <!-- ENDING SCREEN -->
+    <section id="ending-screen" class="screen hidden" style="text-align:center">
+        <h1 id="end-title" class="terminal-text"></h1>
+        <div id="end-report" style="max-width:600px; margin: 20px auto; text-align:left; background: #111; padding: 20px;"></div>
+        <button class="btn" onclick="location.reload()">Replay Investigation</button>
+    </section>
+
+    <script>
+        /** 
+         * GAME DATA 
+         */
+        const DATA = {
+            clues: {
+                'vance_discontent': { id: 'vance_discontent', title: 'Elena\'s Email', desc: 'An email where Elena Vance calls NovaTech "unethical monsters".', found: false },
+                'log_spike': { id: 'log_spike', title: 'Server Log', desc: 'A power surge at 03:05 AM in the server room.', found: false },
+                'marcus_debt': { id: 'marcus_debt', title: 'Gambling Records', desc: 'Marcus Thorne owes 2 million credits to the Syndicate.', found: false },
+                'jax_access': { id: 'jax_access', title: 'Backdoor Entry', desc: 'Jax Miller accessed the AI core via a hidden port.', found: false },
+                'chimera_file': { id: 'chimera_file', title: 'Project Chimera', desc: 'Secret file showing NovaTech harvests user brain-waves.', found: false, secret: true },
+                'stolen_id': { id: 'stolen_id', title: 'Thorne\'s ID', desc: 'Thorne\'s physical ID card was used during the heist.', found: false }
+            },
+            suspects: {
+                'elena': {
+                    name: 'Elena Vance', role: 'Lead Architect', bio: 'Missing since the breach. Brilliant but idealistic.',
+                    lines: {
+                        initial: "I can't talk long. They are watching the network. I didn't steal it to sell it, Detective.",
+                        evidence: "NovaTech isn't building an AI. They're building a cage for the human mind."
+                    }
+                },
+                'marcus': {
+                    name: 'Marcus Thorne', role: 'Security Chief', bio: 'Ex-military. Hardline. Claims he was patrolling Sector 4.',
+                    lines: {
+                        initial: "Vance is our thief. I saw her badge scan into the vault. Simple as that.",
+                        evidence: "My debts? Everyone has debts in this city. Doesn't make me a traitor."
+                    }
+                },
+                'jax': {
+                    name: 'Jax Miller', role: 'Systems Admin', bio: 'Young, nervous, and knows the system better than anyone.',
+                    lines: {
+                        initial: "I just do the maintenance! I don't know why the logs were wiped!",
+                        evidence: "Okay, fine! I found a backdoor, but I didn't use it for the AI. I was looking for Project Chimera."
+                    }
+                }
+            },
+            connections: [
+                { a: 'vance_discontent', b: 'jax_access', result: 'Elena and Jax were working together to expose the truth.' },
+                { a: 'marcus_debt', b: 'stolen_id', result: 'Marcus likely staged the theft to pay his creditors.' },
+                { a: 'jax_access', b: 'chimera_file', result: 'The "theft" was actually an attempt to delete Project Chimera.' }
+            ]
+        };
+
+        /**
+         * GAME ENGINE
+         */
+        const game = {
+            state: {
+                currentClues: [],
+                linkedConnections: [],
+                hints: 3,
+                score: 0,
+                selectedEvidence: [],
+                foundSecret: false
+            },
+
+            init() {
+                this.checkSave();
+                this.updateHUD();
+            },
+
+            checkSave() {
+                if (localStorage.getItem('cyberDetectiveSave')) {
+                    document.getElementById('continue-btn').classList.remove('hidden');
+                }
+            },
+
+            save() {
+                localStorage.setItem('cyberDetectiveSave', JSON.stringify(this.state));
+            },
+
+            load() {
+                const saved = localStorage.getItem('cyberDetectiveSave');
+                if (saved) {
+                    this.state = JSON.parse(saved);
+                    this.showScreen('game-screen');
+                    this.renderEvidence();
+                    this.updateHUD();
+                }
+            },
+
+            startNew() {
+                localStorage.removeItem('cyberDetectiveSave');
+                this.showScreen('briefing-screen');
+            },
+
+            showScreen(id) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+                document.getElementById(id).classList.remove('hidden');
+            },
+
+            showTab(tab) {
+                document.querySelectorAll('#main-content > div').forEach(d => d.classList.add('hidden'));
+                document.querySelectorAll('.nav-icon').forEach(n => n.classList.remove('active'));
+                document.getElementById(`view-${tab}`).classList.remove('hidden');
+                
+                if(tab === 'interrogation') this.renderSuspects();
+                if(tab === 'accuse') this.renderAccusation();
+            },
+
+            updateHUD() {
+                document.getElementById('clue-count').innerText = this.state.currentClues.length;
+                document.getElementById('hint-count').innerText = this.state.hints;
+            },
+
+            // --- FILE SYSTEM / PUZZLES ---
+            openFile(type) {
+                const overlay = document.getElementById('puzzle-overlay');
+                const content = document.getElementById('puzzle-content');
+                overlay.classList.remove('hidden');
+
+                if (type === 'email') {
+                    content.innerHTML = `
+                        <h3>Email Archive</h3><br>
+                        <p>To: E. Vance | From: Management<br>"Stop questioning the Project Chimera ethics or you will be replaced."</p><br>
+                        <button class="btn" onclick="game.collectClue('vance_discontent')">Download Attachment</button>
+                        <button class="btn" onclick="game.closePuzzle()">Close</button>
+                    `;
+                } else if (type === 'logs') {
+                    content.innerHTML = `
+                        <h3>Security Logs</h3><br>
+                        <p>Identify the anomaly:</p>
+                        <p>02:50 AM - Thorne Badge - Entry Sector 4</p>
+                        <p>03:00 AM - Vance Badge - Entry VAULT</p>
+                        <p>03:05 AM - POWER SPIKE - VAULT</p><br>
+                        <button class="btn" onclick="game.collectClue('log_spike')">Log Spike Entry</button>
+                        <button class="btn" onclick="game.collectClue('stolen_id')">Flag ID Usage</button>
+                        <button class="btn" onclick="game.closePuzzle()">Close</button>
+                    `;
+                } else if (type === 'encrypted') {
+                    content.innerHTML = `
+                        <h3>Decryption Required</h3><br>
+                        <p>Enter the code: (Hint: The time of the power spike)</p>
+                        <input type="text" id="pass-input" style="background:#000; color:#0f0; border:1px solid #0f0; padding:10px">
+                        <button class="btn" onclick="game.solveEncryption()">Decrypt</button>
+                        <button class="btn" onclick="game.closePuzzle()">Close</button>
+                    `;
+                }
+            },
+
+            solveEncryption() {
+                const val = document.getElementById('pass-input').value;
+                if (val === '0305') {
+                    alert("Decryption Successful.");
+                    this.collectClue('chimera_file');
+                    this.state.foundSecret = true;
+                    this.closePuzzle();
+                } else {
+                    alert("Access Denied.");
+                }
+            },
+
+            closePuzzle() {
+                document.getElementById('puzzle-overlay').classList.add('hidden');
+            },
+
+            collectClue(id) {
+                if (!this.state.currentClues.includes(id)) {
+                    this.state.currentClues.push(id);
+                    this.updateHUD();
+                    alert("Evidence Collected: " + DATA.clues[id].title);
+                }
+            },
+
+            // --- EVIDENCE BOARD ---
+            renderEvidence() {
+                const container = document.getElementById('evidence-display');
+                container.innerHTML = '';
+                this.state.currentClues.forEach(id => {
+                    const c = DATA.clues[id];
+                    const div = document.createElement('div');
+                    div.className = `evidence-card ${this.state.selectedEvidence.includes(id) ? 'selected' : ''}`;
+                    div.innerHTML = `<h4>${c.title}
